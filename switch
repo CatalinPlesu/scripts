@@ -18,6 +18,7 @@ then
 	sed -i 's/Light/Dark/g' ~/.config/VSCodium/User/settings.json 
 	sed -i 's/config.source("themes[^ ]*/config.source("themes\/gruvbox.py")/' ~/.config/qutebrowser/config.py  
 	sed -i 's/fbf1c7/282828/' /home/catalin/code/web/start_pages/18_08_2021/style.css
+	sed -i 's/fb4934/b8bb26/' /home/catalin/code/web/start_pages/18_08_2021/style.css
 	sed -i 's/gruvbox-light/gruvbox-dark/' /home/catalin/.config/rofi/config.rasi
 
 	theme="dark"
@@ -27,11 +28,16 @@ else
 	sed -i 's/Dark/Light/g' ~/.config/VSCodium/User/settings.json
 	sed -i 's/config.source("themes[^ ]*/config.source("themes\/base16-gruvbox-light-medium.config.py")/' ~/.config/qutebrowser/config.py  
 	sed -i 's/282828/fbf1c7/' /home/catalin/code/web/start_pages/18_08_2021/style.css
+	sed -i 's/b8bb26/fb4934/' /home/catalin/code/web/start_pages/18_08_2021/style.css
 	sed -i 's/gruvbox-dark/gruvbox-light/' /home/catalin/.config/rofi/config.rasi
 
 	theme="light"
 fi
 pkill -USR1 -x kitty
 qtile cmd-obj -o cmd -f restart
-
+if  pgrep -x qutebrowser 
+then
+	qutebrowser ':reload'
+	qutebrowser ':config-source'
+fi 
 echo "$theme" > $FILE
