@@ -1,0 +1,19 @@
+#!/bin/sh
+if [ -z $1 ]
+then
+	cp ~/.config/kitty/gruvbox/dark.conf ~/.config/kitty/colors.conf
+	cp ~/.config/qtile/gruvbox/dark.py ~/.config/qtile/theme.py
+	sed -i 's/Light/Dark/g' ~/.config/VSCodium/User/settings.json 
+	sed -i 's/config.source("themes[^ ]*/config.source("themes\/gruvbox.py")/' ~/.config/qutebrowser/config.py  
+	sed -i 's/fbf1c7/282828/' /home/catalin/code/web/start_pages/18_08_2021/style.css
+	sed -i 's/gruvbox-light/gruvbox-dark/' /home/catalin/.config/rofi/config.rasi
+else
+	cp ~/.config/kitty/gruvbox/light.conf ~/.config/kitty/colors.conf
+	cp ~/.config/qtile/gruvbox/light.py ~/.config/qtile/theme.py
+	sed -i 's/Dark/Light/g' ~/.config/VSCodium/User/settings.json
+	sed -i 's/config.source("themes[^ ]*/config.source("themes\/base16-gruvbox-light-medium.config.py")/' ~/.config/qutebrowser/config.py  
+	sed -i 's/282828/fbf1c7/' /home/catalin/code/web/start_pages/18_08_2021/style.css
+	sed -i 's/gruvbox-dark/gruvbox-light/' /home/catalin/.config/rofi/config.rasi
+fi
+pkill -USR1 -x kitty
+qtile cmd-obj -o cmd -f restart

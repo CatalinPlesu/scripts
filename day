@@ -1,0 +1,3 @@
+#!/bin/sh
+d=`date +%d_%b_%Y`
+echo "[$d]($d.md)"

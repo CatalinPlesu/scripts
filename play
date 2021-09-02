@@ -1,0 +1,9 @@
+#!/bin/sh
+if [ -z $1 ]
+then
+	cd `find ~/Music/ -type d -name '[!.]*' | shuf -n 1`
+	echo `pwd`
+else
+	echo "playing in curent directory"
+fi
+mpg123 -Z *.mp3
