@@ -2,8 +2,10 @@
 if [ -z $1 ]
 then
 	cd `find ~/Music/ -type d -name '[!.]*' | shuf -n 1`
+	echo "playing in"
 	echo `pwd`
 else
-	echo "playing in curent directory"
+	cd $1
+	echo "playing in $1"
 fi
 mpg123 -Z *.mp3
