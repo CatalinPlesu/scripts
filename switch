@@ -21,7 +21,8 @@ then
 	sed -i 's/fb4934/b8bb26/' /home/catalin/code/web/start_pages/common.css
 	sed -i 's/gruvbox-light/gruvbox-dark/' /home/catalin/.config/rofi/config.rasi
 
-	nitrogen --set-zoom /home/catalin/Pictures/wallpapers/anime/anime_41.png
+	# nitrogen --set-zoom /home/catalin/Pictures/wallpapers/anime/anime_33.png
+	nitrogen --set-zoom /home/catalin/Pictures/wallpapers/wallhaven-4lv57y.jpg
 	theme="dark"
 else
 	cp ~/.config/kitty/gruvbox/light.conf ~/.config/kitty/colors.conf
@@ -32,7 +33,8 @@ else
 	sed -i 's/b8bb26/fb4934/' /home/catalin/code/web/start_pages/common.css
 	sed -i 's/gruvbox-dark/gruvbox-light/' /home/catalin/.config/rofi/config.rasi
 
-	nitrogen --set-zoom ~/Pictures/wallpapers/anime/wallhaven-nzm37j_1920x1080.png
+	# nitrogen --set-zoom ~/Pictures/wallpapers/anime/anime_19.jpg
+	nitrogen --set-zoom ~/Pictures/wallpapers/samurai.jpg
 	theme="light"
 fi
 pkill -USR1 -x kitty
