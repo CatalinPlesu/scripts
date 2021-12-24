@@ -20,12 +20,13 @@ else
 	cd ~/Music/$Y/$B
 fi
 
-echo "DOWNLOAD STARTED IN"
-echo `pwd`
-echo "\n\n"
 
 echo -n "(Continue the download [y/n])? "
 read answer
+
+echo "DOWNLOAD STARTED IN"
+echo `pwd`
+echo "\n"
 
 if [ "$answer" != "${answer#[Yy]}" ] ;then
 	if [ -z "$2" ]

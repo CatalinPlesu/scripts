@@ -1,0 +1,8 @@
+#!/bin/sh
+rsync -aP ~/Documents /media/catalin/catalin/
+# rsync -aP ~/code /media/catalin/catalin/
+rsync -aP ~/UTM /media/catalin/catalin/
+rsync -aP ~/Downloads /media/catalin/catalin/
+rsync -aP ~/sync /media/catalin/catalin/
+rsync -aP ~/Zotero /media/catalin/catalin/
+rsync -aP ~/.ssh /media/catalin/catalin/ssh
