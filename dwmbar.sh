@@ -1,4 +1,4 @@
 while true; do
 	xsetroot -name "$(date)"
-	sleep 1m
+	sleep 15
 done
