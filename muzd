@@ -22,7 +22,12 @@ fi
 
 
 echo -n "(Continue the download [y/n])? "
-read answer
+if [ -z "$3" ]
+then
+    read answer
+else
+    answer=$3
+fi
 
 echo "DOWNLOAD STARTED IN"
 echo `pwd`
