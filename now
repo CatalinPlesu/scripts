@@ -15,14 +15,14 @@ fi
 
 mkdir -p "$Notebook/$Y/$B"
 if ! grep -q "$Y" "$Notebook/$File"; then
-	echo "[$Y]($Y/index.md)" >> "$Notebook/$File"
+	echo "- [$Y]($Y/index.md)" >> "$Notebook/$File"
 fi
 if ! grep -q "$B" "$Notebook/$Y/$File"; then
-	echo "[$B]($B/index.md)" >> "$Notebook/$Y/$File"
+	echo "- [$B]($B/index.md)" >> "$Notebook/$Y/$File"
 fi
 
 if ! grep -q "$F" "$Notebook/$Y/$B/$File"; then
-	echo "[$F]($F.md)  " >> "$Notebook/$Y/$B/$File"
+	echo "- [$F]($F.md)  " >> "$Notebook/$Y/$B/$File"
 fi
 # touch "$Notebook/$Y/$B/$F.md"
 echo "[$(date +%T)]  " >> "$Notebook/$Y/$B/$F.md"
