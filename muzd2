@@ -1,0 +1,63 @@
+#!/bin/sh
+YEAR=`date +%Y`
+MONTH=`date +%B`
+
+
+while getopts au: name
+do
+    case $name in
+    a)    a_flag=1;;
+    u)    url_flag=1
+          url_val="$OPTARG";;
+    ?)    printf "Usage: %s: [-s] [-o] [-O] [-r] [-f file]\n" $0
+          exit 2;;
+    esac
+done
+
+
+if [ -n "$2" ]
+then
+	if test "${url#*index}" != "$url" -o "${url#*playlist}" != "$url" -o "${url#*radio}" != "$url"
+	then
+		echo "PLAYLST DETECTED"
+		mkdir -p ~/Music/$2
+		cd ~/Music/$2
+	else
+		echo "SONG DETECTED"
+		mkdir -p ~/Music/$Y/$B
+		cd ~/Music/$Y/$B
+	fi
+else
+	echo "SONG DETECTED"
+	mkdir -p ~/Music/$Y/$B
+	cd ~/Music/$Y/$B
+fi
+
+
+echo -n "(Continue the download [y/n])? "
+if [ -z "$3" ]
+then
+    read answer
+else
+    answer=$3
+fi
+
+echo "DOWNLOAD STARTED IN"
+echo `pwd`
+echo "\n"
+
+if [ "$answer" != "${answer#[Yy]}" ] ;then
+	if [ -z "$2" ]
+	then
+	youtube-dl --ignore-errors --extract-audio --audio-format mp3 --audio-quality 0\
+		--add-metadata --no-playlist --embed-thumbnail -o "%(title)s.%(ext)s" $1 
+	else
+	youtube-dl --ignore-errors --get-id $1 \
+		| xargs -I '{}' -P 5 \
+		youtube-dl --ignore-errors --extract-audio --audio-format mp3 --audio-quality 0 \
+		--add-metadata --embed-thumbnail -o "%(title)s.%(ext)s" 'https://youtube.com/watch?v={}'
+	fi
+else
+	echo see you later
+fi
+

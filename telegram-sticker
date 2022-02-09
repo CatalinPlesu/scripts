@@ -1,1 +1,0 @@
-mogrify -format png -path ../telegram -resize "512x512<" -background transparent -gravity center -extent 512x512 *.png
