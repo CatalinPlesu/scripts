@@ -1,50 +1,85 @@
 #!/bin/sh
-url="'$1'"
-Y=`date +%Y`
-B=`date +%B`
-if [ -n "$2" ]
+YEAR=`date +%Y`
+MONTH=`date +%B`
+
+while getopts shnp:u: name
+do
+    case $name in
+    s)    s_flag=1;;
+    h)    h_flag=1;;
+    n)    n_flag=1
+          continue='y';;
+    u)    url_flag=1
+          url="$OPTARG";;
+    p)    playlist_flag=1
+          playlist="$OPTARG";;
+    ?)    printf "Usage: %s: [-s] [-n] [-u url] [-p playlist]\n\
+        -s - single song\n\
+        -n - no confirm\n\
+        -u - url to youtube video or playlist\n\
+        -p - playlist name for dir in whichi it will be saved\n" $0
+          exit 2;;
+    esac
+done
+
+if [ ! -z "$h_flag" ]; then
+    printf "Usage: [-s] [-n] [-u url] [-p playlist]\n\
+            -s - single song\n\
+            -n - no confirm\n\
+            -u - url to youtube video or playlist\n\
+            -p - playlist name for dir in whichi it will be saved\n"
+    exit 0
+fi
+
+
+if test "${url#*index}" != "$url" -o "${url#*playlist}" != "$url" -o "${url#*radio}" != "$url"
 then
-	if test "${url#*index}" != "$url" -o "${url#*playlist}" != "$url" -o "${url#*radio}" != "$url"
-	then
-		echo "PLAYLST DETECTED"
-		mkdir -p ~/Music/$2
-		cd ~/Music/$2
-	else
-		echo "SONG DETECTED"
-		mkdir -p ~/Music/$Y/$B
-		cd ~/Music/$Y/$B
-	fi
+    echo "PLAYLST DETECTED"
+    if [ -z "$playlist_flag" ] || [ ! -z "$s_flag" ]; then
+        download_dir=~/Music/$YEAR/$MONTH
+    else
+        download_dir=~/Music/$YEAR/playlists/$playlist
+    fi
 else
-	echo "SONG DETECTED"
-	mkdir -p ~/Music/$Y/$B
-	cd ~/Music/$Y/$B
+    echo "SONG DETECTED"
+    download_dir=~/Music/$YEAR/$MONTH
+    s_flag=1
 fi
 
-
-echo -n "(Continue the download [y/n])? "
-if [ -z "$3" ]
+echo "Download path: '$download_dir'"
+echo -n "Continue the download [y/n]? "
+if [ -z "$n_flag" ]
 then
-    read answer
-else
-    answer=$3
+    read continue
 fi
 
-echo "DOWNLOAD STARTED IN"
-echo `pwd`
-echo "\n"
-
-if [ "$answer" != "${answer#[Yy]}" ] ;then
-	if [ -z "$2" ]
-	then
-	youtube-dl --ignore-errors --extract-audio --audio-format mp3 --audio-quality 0\
-		--add-metadata --no-playlist --embed-thumbnail -o "%(title)s.%(ext)s" $1 
-	else
-	youtube-dl --ignore-errors --get-id $1 \
-		| xargs -I '{}' -P 5 \
-		youtube-dl --ignore-errors --extract-audio --audio-format mp3 --audio-quality 0 \
-		--add-metadata --embed-thumbnail -o "%(title)s.%(ext)s" 'https://youtube.com/watch?v={}'
-	fi
-else
-	echo see you later
+if [ ! "$continue" != "${continue#[Yy]}" ] ;then
+    echo "see you later"
+    exit 0
 fi
 
+notify-send "download started in '$download_dir'" -t 3000
+
+
+mkdir -p $download_dir
+cd $download_dir
+
+if [ ! -z "$s_flag" ]; then
+    echo "Downloading a single file"
+    youtube-dl --ignore-errors --extract-audio --audio-format mp3 --audio-quality 0\
+    --add-metadata --no-playlist --embed-thumbnail -o "%(title)s.%(ext)s" $url 
+else
+    echo "Downloading multiple files in paralell"
+
+    youtube-dl --ignore-errors --get-id $url \
+        | xargs -I '{}' -P 5 \
+        sh -c 'youtube-dl --ignore-errors --extract-audio --audio-format mp3 --audio-quality 0 \
+        --add-metadata --embed-thumbnail -o "%(title)s.%(ext)s" "https://youtube.com/watch?v={}"; (true)'
+fi
+
+notify-send "download finished" --urgency=low
+
+mkdir -p ~/Music/xiaomi/$MONTH
+cp -rn $download_dir/* ~/Music/xiaomi/$MONTH/
+
+notify-send "Downloaded content synced to phone" --urgency=low
