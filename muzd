@@ -85,5 +85,5 @@ if [ $(ps aux | grep muzd | grep -v grep | grep -v qute | wc -l) = 2 ]; then
     mkdir -p ~/Music/xiaomi/$MONTH
     cp -rn $download_dir/* ~/Music/xiaomi/$MONTH/
 
-    notify-send "Downloaded content synced to phone" --urgency=critical
+    notify-send -t 4000 "Sync>" "<span color='#fabd2f' font='20px'><i><b>Music copyed to phone</b></i></span>"
 fi
