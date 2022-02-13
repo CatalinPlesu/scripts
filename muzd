@@ -31,7 +31,7 @@ if [ ! -z "$h_flag" ]; then
     exit 0
 fi
 
-if [ -z "$url_flag" ]; then
+if [ -z "$url_flag" ] || [ -z "$url" ]; then
     printf "At least profide url"
     exit 0
 fi
