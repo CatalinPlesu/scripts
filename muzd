@@ -31,6 +31,10 @@ if [ ! -z "$h_flag" ]; then
     exit 0
 fi
 
+if [ -z "$url_flag" ]; then
+    printf "At least profide url"
+    exit 0
+fi
 
 if test "${url#*index}" != "$url" -o "${url#*playlist}" != "$url" -o "${url#*radio}" != "$url"
 then
@@ -85,5 +89,5 @@ if [ $(ps aux | grep muzd | grep -v grep | grep -v qute | wc -l) = 2 ]; then
     mkdir -p ~/Music/xiaomi/$MONTH
     cp -rn $download_dir/* ~/Music/xiaomi/$MONTH/
 
-    notify-send -t 4000 "Sync>" "<span color='#fabd2f' font='20px'><i><b>Music copyed to phone</b></i></span>"
+    notify-send -t 4000 "Sync" "<span color='#fabd2f' font='20px'><i><b>Music copyed to phone</b></i></span>"
 fi
