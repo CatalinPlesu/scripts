@@ -16,6 +16,7 @@ then
 	cp ~/.config/kitty/gruvbox/dark.conf ~/.config/kitty/colors.conf
 	cp ~/.config/qtile/gruvbox/dark.py ~/.config/qtile/theme.py
 	sed -i 's/Light/Dark/g' ~/.config/VSCodium/User/settings.json 
+	sed -i 's/Light/Dark/g' ~/.config/wezterm/wezterm.lua
 	sed -i 's/config.source("themes[^ ]*/config.source("themes\/gruvbox.py")/' ~/.config/qutebrowser/config.py  
 	sed -i 's/fbf1c7/282828/' /home/catalin/.config/qutebrowser/startpage/common.css
 	sed -i 's/fb4934/b8bb26/' /home/catalin/.config/qutebrowser/startpage/common.css
@@ -28,6 +29,7 @@ else
 	cp ~/.config/kitty/gruvbox/light.conf ~/.config/kitty/colors.conf
 	cp ~/.config/qtile/gruvbox/light.py ~/.config/qtile/theme.py
 	sed -i 's/Dark/Light/g' ~/.config/VSCodium/User/settings.json
+	sed -i 's/Dark/Light/g' ~/.config/wezterm/wezterm.lua 
 	sed -i 's/config.source("themes[^ ]*/config.source("themes\/base16-gruvbox-light-medium.config.py")/' ~/.config/qutebrowser/config.py  
 	sed -i 's/282828/fbf1c7/' /home/catalin/.config/qutebrowser/startpage/common.css
 	sed -i 's/b8bb26/fb4934/' /home/catalin/.config/qutebrowser/startpage/common.css
