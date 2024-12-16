@@ -1,0 +1,4 @@
+#!/bin/bash
+git ls-files | xargs -n100 wc -l | awk -F ' +|\\.' \
+    '/\./ { sumlines[$NF] += $2 }
+     END { for (ext in sumlines) print ext, sumlines[ext] }' | sort -k2,2rn

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd ~/UsedProjects/10moons-driver/
+source venv/bin/activate
+sudo python3 driver.py
+
