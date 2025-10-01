@@ -71,13 +71,13 @@ cd $download_dir
 
 if [ ! -z "$s_flag" ]; then
     echo "Downloading a single file"
-    yt-dlp --cookies-from-browser firefox:81h7km4p.default-esr --ignore-errors --extract-audio --audio-format mp3 --audio-quality 0\
+    yt-dlp  --ignore-errors --extract-audio --audio-format mp3 --audio-quality 0\
         --add-metadata --no-playlist --embed-thumbnail -o "%(title)s.%(ext)s" $url
         else
             echo "Downloading multiple files in paralell"
 
-            yt-dlp --cookies-from-browser firefox:81h7km4p.default-esr --ignore-errors --get-id $url \
-                | xargs -I '{}' -P 5 \
+            yt-dlp --ignore-errors --get-id $url \
+                | xargs -I '{}' -P 1 \
                 sh -c 'yt-dlp --ignore-errors --extract-audio --audio-format mp3 --audio-quality 0 \
                 --add-metadata --embed-thumbnail -o "%(title)s.%(ext)s" "https://youtube.com/watch?v={}"; (true)'
 

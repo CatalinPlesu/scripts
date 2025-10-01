@@ -1,0 +1,14 @@
+#!/bin/sh
+# stop and remove
+docker stop open-webui
+docker rm open-webui
+
+# pull latest
+docker pull ghcr.io/open-webui/open-webui:main
+
+# run in backroung
+docker run -d -p 3000:8080 \
+  -v open-webui:/app/backend/data \
+  --name open-webui \
+  --restart always \
+  ghcr.io/open-webui/open-webui:main

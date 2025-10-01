@@ -10,14 +10,10 @@ options=(
     "3.4 Qutebrowser bindings|$HOME/.config/qutebrowser/modules|bindings.py"
     "4.1 shell aliases|$HOME/.config/shell|alias"
     "4.2 shell environment|$HOME/.config/shell|env"
-    "4.3 bash config|$HOME|.bashrc"
     "4.4 zsh config|$HOME|.zshrc"
     "5.1 script window|$HOME/scripts|window_menu.sh"
     "5.2 script edit|$HOME/scripts|edit_config.sh"
-    "6 script sxhkd|$HOME/.config/sxhkd|sxhkdrc"
-    "7 script bspwm|$HOME/.config/bspwm|bspwmrc"
-    "8 script swhkd|$HOME/.config/swhkd|swhkdrc"
-    "9 script hyprland|$HOME/.config/hypr|hyprland.conf"
+    "6 autostart pods|$HOME/scripts|podman-compose-autostart"
 )
 
 

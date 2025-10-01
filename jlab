@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd ~/Workspace/Jupiter/
+
+source venv/bin/activate
+
+jupyter notebook --no-browser &
+jupyter lab --no-browser &

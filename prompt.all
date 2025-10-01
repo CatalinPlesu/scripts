@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat "$(find ~/Documents/Notes -ipath "*prompt*"  -type f | fzf)" | wl-copy
