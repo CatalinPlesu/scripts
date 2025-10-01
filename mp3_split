@@ -1,0 +1,136 @@
+#!/bin/bash
+# Check if an input file was provided
+if [ -z "$1" ]; then
+    echo "Error: No input file provided."
+    echo "Usage: $0 \"/path/to/your/music.mp3\" [optional_cover_image.jpg]"
+    exit 1
+fi
+
+# Assign the first command-line argument to a variable for clarity
+input_file="$1"
+cover_image="$2"  # Optional cover image file
+
+# Create output directory based on input filename (without .mp3 extension)
+input_basename=$(basename "$input_file" .mp3)
+output_dir="$input_basename"
+
+# An array of tracks, with each entry containing the start time and title.
+# Format: "start_time|title"
+tracks=(
+"0:00:00|Boom Boom Party! (Cover)"
+"0:02:29|Bounce Back (Cover)"
+"0:04:54|Celestial Fragments (Cover)"
+"0:07:19|Clap Your Way Up (Cover)"
+"0:09:57|Color of My World (Cover)"
+"0:12:56|Cosmic Dreams - Midnight Edition (Cover)"
+"0:15:15|Cosmic Dreams - Starlight Edition (Cover)"
+"0:17:56|Crimson Reverie (Cover)"
+"0:20:41|Desert Mirage (Cover)"
+"0:23:41|Digital Horizons (Cover)"
+"0:26:52|Edge of Forever (Cover)"
+"0:30:12|Electric Heartbeat (Cover)"
+"0:32:47|Ephemeral Glow (Cover)"
+"0:36:01|Euphoria Reactor (Cover)"
+"0:38:41|Fading into You (Cover)"
+"0:41:47|Fragments of a Shattered Sky (Cover)"
+"0:44:56|Frosted Light (Cover)"
+"0:48:10|Golden Hour Groove (Cover)"
+"0:50:45|Gravity of Emotions (Cover)"
+"0:53:26|High Five the Sky (Cover)"
+"0:56:15|If We Meet Again (Cover)"
+"0:59:20|Infinite Reflections (Cover)"
+)
+
+# Automatically get the duration of the input file
+echo "Getting file duration..."
+duration=$(ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$input_file")
+last_track_end_time=$(printf '%02d:%02d:%02d' $((${duration%.*}/3600)) $((${duration%.*}%3600/60)) $((${duration%.*}%60)))
+echo "File duration: $last_track_end_time"
+
+# Create the output directory if it doesn't exist
+mkdir -p "$output_dir"
+
+# Extract thumbnail from original file if it exists
+thumbnail_file="$output_dir/cover.jpg"
+echo "Extracting thumbnail from original file..."
+ffmpeg -i "$input_file" -an -vcodec copy "$thumbnail_file" -y 2>/dev/null
+thumbnail_extracted=$?
+
+if [ $thumbnail_extracted -eq 0 ]; then
+    echo "Thumbnail extracted to: $thumbnail_file"
+    cover_image="$thumbnail_file"
+else
+    echo "No thumbnail found in original file"
+    cover_image=""
+fi
+
+# Get the number of tracks
+num_tracks=${#tracks[@]}
+
+# Loop through the tracks and split the audio
+for i in "${!tracks[@]}"; do
+    current_track="${tracks[$i]}"
+    start_time=$(echo "$current_track" | cut -d'|' -f1)
+    title=$(echo "$current_track" | cut -d'|' -f2)
+    
+    # Determine the end time for the current track
+    if (( i + 1 < num_tracks )); then
+        # The end time is the start time of the next track
+        next_track="${tracks[$i+1]}"
+        end_time=$(echo "$next_track" | cut -d'|' -f1)
+    else
+        # For the last track, use the manually specified end time
+        end_time="$last_track_end_time"
+    fi
+    
+    # Construct the output filename
+    # Remove leading/trailing spaces from the title
+    clean_title=$(echo "$title" | xargs)
+    output_file="$output_dir/${clean_title}.mp3"
+    
+    # Build ffmpeg command - use extracted thumbnail if available
+    if [ -n "$cover_image" ] && [ -f "$cover_image" ]; then
+        # Use extracted thumbnail
+        echo "Adding extracted thumbnail to: $clean_title"
+        ffmpeg -i "$input_file" -i "$cover_image" -ss "$start_time" -to "$end_time" \
+               -c:a copy -c:v:1 mjpeg -map 0:a -map 1:v \
+               -disposition:v:0 attached_pic -y "$output_file"
+    else
+        # No cover art available, audio only
+        echo "No thumbnail available for: $clean_title"
+        ffmpeg -i "$input_file" -ss "$start_time" -to "$end_time" \
+               -c:a copy -vn -y "$output_file"
+    fi
+    
+    echo "Split track: $output_file"
+done
+
+echo "All tracks have been split and saved to the '$output_dir' folder."
+if [ -f "$thumbnail_file" ]; then
+    echo "Extracted thumbnail saved as: $thumbnail_file"
+fi
+
+# Optional: Add metadata to tracks
+echo "Would you like to add metadata (title, artist, etc.) to the tracks? (y/n)"
+read -r add_metadata
+
+if [[ "$add_metadata" =~ ^[Yy]$ ]]; then
+    echo "Enter artist name (or press Enter to skip):"
+    read -r artist_name
+    
+    if [ -n "$artist_name" ]; then
+        echo "Adding metadata to tracks..."
+        for i in "${!tracks[@]}"; do
+            current_track="${tracks[$i]}"
+            title=$(echo "$current_track" | cut -d'|' -f2)
+            clean_title=$(echo "$title" | xargs)
+            output_file="$output_dir/${clean_title}.mp3"
+            
+            # Add metadata
+            ffmpeg -i "$output_file" -c copy -metadata title="$clean_title" \
+                   -metadata artist="$artist_name" -metadata track="$((i+1))" \
+                   -y "${output_file}.tmp" && mv "${output_file}.tmp" "$output_file"
+        done
+        echo "Metadata added to all tracks."
+    fi
+fi

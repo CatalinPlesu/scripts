@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+cd ~/dev/used/livebook/
+podman compose up -d 
+
+cd ~/dev/used/openwebui/
+podman compose up -d 
+
+# cd ~/dev/used/grafana/
+# podman compose up -d 
+

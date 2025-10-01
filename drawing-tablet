@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd /home/catalin/dev/used/10moons-driver/
+source venv/bin/activate
+PY=$(which python3)
+sudo $PY driver.py
+

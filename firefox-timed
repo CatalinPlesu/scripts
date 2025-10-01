@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Launch Firefox
+/usr/lib/firefox-esr/firefox-esr &
+
+# Get the process ID of the last command run in the background
+PID=$!
+
+# Generate a random sleep time between 300 and 600 seconds
+SLEEP_TIME=$((RANDOM % 301 + 300))
+
+# Wait for the random time
+sleep $SLEEP_TIME
+
+# Kill the Firefox process
+kill $PID

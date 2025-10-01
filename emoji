@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Check if a parameter is provided
+if [ -z "$1" ]; then
+  echo "Usage: $0 <0-9>"
+  exit 1
+fi
+
+# Get the parameter and map it to an emoji
+case "$1" in
+  0)
+    emoji="🔴"
+    ;;
+  1)
+    emoji="🟠"
+    ;;
+  2)
+    emoji="🟡"
+    ;;
+  3)
+    emoji="🟢"
+    ;;
+  4)
+    emoji="🔵"
+    ;;
+  5)
+    emoji="🟣"
+    ;;
+  6)
+    emoji="🟤"
+    ;;
+  7)
+    emoji="⚪"
+    ;;
+  8)
+    emoji="⚫"
+    ;;
+  9)
+    emoji="🔥"
+    ;;
+  *)
+    echo "Invalid number. Please provide a number between 0 and 9."
+    exit 1
+    ;;
+esac
+
+# Use xdotool to type the selected emoji
+xdotool type "$emoji"

@@ -1,0 +1,608 @@
+#!/bin/bash
+
+# prompt-compose - A TUI for composing prompts from files
+# Usage: prompt-compose [preset_name]
+
+PROMPTS_DIR="$HOME/Documents/Notes/prompts"
+CONFIG_DIR="$HOME/Documents/Notes/prompts/.config"
+TEMP_DIR="/tmp/prompt-compose-$$"
+CACHE_FILE="$CONFIG_DIR/.last_action"
+
+# Colors and formatting
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m' # No Color
+
+# Default action cache
+LAST_ACTION=""
+
+# Cleanup on exit
+cleanup() {
+    rm -rf "$TEMP_DIR"
+}
+trap cleanup EXIT
+
+# Initialize
+init() {
+    mkdir -p "$CONFIG_DIR" "$TEMP_DIR"
+    
+    if [[ ! -d "$PROMPTS_DIR" ]]; then
+        echo -e "${RED}Error: Prompts directory not found: $PROMPTS_DIR${NC}"
+        exit 1
+    fi
+    
+    # Load last action
+    if [[ -f "$CACHE_FILE" ]]; then
+        LAST_ACTION=$(cat "$CACHE_FILE")
+    else
+        LAST_ACTION="c"  # default to copy
+    fi
+}
+
+# Save last action
+save_last_action() {
+    echo "$1" > "$CACHE_FILE"
+    LAST_ACTION="$1"
+}
+
+# Find all prompt files
+find_prompts() {
+    find "$PROMPTS_DIR" -type f \( -name "*.md" -o -name "*.txt" -o -name "*.prompt" \) -not -path "*/.config/*" | sort
+}
+
+# Display main menu
+show_main_menu() {
+    clear
+    echo -e "${BOLD}${CYAN}=== Prompt Composer ===${NC}\n"
+    echo -e "${BOLD}Options:${NC}"
+    echo -e "  ${GREEN}n${NC}) Create ${BOLD}n${NC}ew composition"
+    echo -e "  ${GREEN}cd${NC}) Load preset (edit mode)"
+    echo -e "  ${GREEN}cp${NC}) Load preset and copy immediately" 
+    echo -e "  ${GREEN}ls${NC}) List presets"
+    echo -e "  ${GREEN}rm${NC}) Delete preset"
+    echo -e "  ${GREEN}q${NC}) Quit"
+    echo
+    
+    local default_hint=""
+    case $LAST_ACTION in
+        "n") default_hint="new composition" ;;
+        "cd") default_hint="load preset" ;;
+        "cp") default_hint="copy preset" ;;
+        "ls") default_hint="list presets" ;;
+    esac
+    
+    if [[ -n "$default_hint" ]]; then
+        echo -e "${DIM}Press ENTER for last action: $default_hint${NC}"
+    fi
+}
+
+# Manage composition files
+manage_files() {
+    local current_files="$TEMP_DIR/selected_files"
+    
+    # Initialize empty if doesn't exist
+    if [[ ! -f "$current_files" ]]; then
+        touch "$current_files"
+    fi
+    
+    while true; do
+        clear
+        echo -e "${BOLD}${CYAN}=== File Management ===${NC}\n"
+        
+        if [[ -s "$current_files" ]]; then
+            echo -e "${BOLD}Current files:${NC}"
+            local i=1
+            while IFS= read -r file; do
+                echo -e "  ${GREEN}$i${NC}) $(basename "$file")"
+                ((i++))
+            done < "$current_files"
+            echo
+        else
+            echo -e "${DIM}No files selected yet${NC}\n"
+        fi
+        
+        echo -e "${BOLD}Options:${NC}"
+        echo -e "  ${GREEN}a${NC}) ${BOLD}A${NC}dd file"
+        echo -e "  ${GREEN}r${NC}) ${BOLD}R${NC}emove file"
+        echo -e "  ${GREEN}o${NC}) Re${BOLD}o${NC}rder files"
+        echo -e "  ${GREEN}c${NC}) ${BOLD}C${NC}lear all"
+        echo -e "  ${GREEN}d${NC}) ${BOLD}D${NC}one (continue to preview)"
+        echo -e "  ${GREEN}b${NC}) ${BOLD}B${NC}ack to main menu"
+        echo
+        
+        if [[ -s "$current_files" ]]; then
+            echo -e "${DIM}Press ENTER to add another file${NC}"
+        else
+            echo -e "${DIM}Press ENTER to add first file${NC}"
+        fi
+        
+        read -p "Choice: " choice
+        
+        # Handle default action - always default to adding files
+        if [[ -z "$choice" ]]; then
+            choice="a"
+        fi
+        
+        case $choice in
+            a)
+                add_file
+                ;;
+            r)
+                remove_file
+                ;;
+            o)
+                if [[ -s "$current_files" ]]; then
+                    reorder_files
+                else
+                    echo -e "${YELLOW}No files to reorder${NC}"
+                    sleep 1
+                fi
+                ;;
+            c)
+                > "$current_files"
+                echo -e "${GREEN}All files cleared${NC}"
+                sleep 1
+                ;;
+            d)
+                if [[ -s "$current_files" ]]; then
+                    return 0
+                else
+                    echo -e "${YELLOW}No files selected${NC}"
+                    sleep 1
+                fi
+                ;;
+            b)
+                return 1
+                ;;
+            *)
+                echo -e "${RED}Invalid choice${NC}"
+                sleep 1
+                ;;
+        esac
+    done
+}
+
+# Add file to composition
+add_file() {
+    echo -e "${BOLD}Select file to add:${NC}"
+    
+    local selected_file
+    selected_file=$(find_prompts | fzf \
+        --preview 'echo "=== {} ===" && head -20 {}' \
+        --preview-window=right:50% \
+        --prompt="Add file: ")
+    
+    if [[ -z "$selected_file" ]]; then
+        echo -e "${YELLOW}No file selected${NC}"
+        return
+    fi
+    
+    # Check if already exists
+    if grep -Fxq "$selected_file" "$TEMP_DIR/selected_files" 2>/dev/null; then
+        echo -e "${YELLOW}File already in composition${NC}"
+        sleep 1
+        return
+    fi
+    
+    echo "$selected_file" >> "$TEMP_DIR/selected_files"
+    echo -e "${GREEN}Added: $(basename "$selected_file")${NC}"
+    sleep 1
+}
+
+# Remove file from composition
+remove_file() {
+    local current_files="$TEMP_DIR/selected_files"
+    
+    if [[ ! -s "$current_files" ]]; then
+        echo -e "${YELLOW}No files to remove${NC}"
+        sleep 1
+        return
+    fi
+    
+    echo -e "${BOLD}Select file to remove:${NC}"
+    
+    local selected_file
+    selected_file=$(sed "s|$PROMPTS_DIR/||g" "$current_files" | fzf --prompt="Remove file: ")
+    
+    if [[ -z "$selected_file" ]]; then
+        echo -e "${YELLOW}No file selected${NC}"
+        return
+    fi
+    
+    # Remove the file
+    local full_path="$PROMPTS_DIR/$selected_file"
+    grep -v "^$full_path$" "$current_files" > "$current_files.tmp" && mv "$current_files.tmp" "$current_files"
+    echo -e "${GREEN}Removed: $selected_file${NC}"
+    sleep 1
+}
+
+# Reorder files
+reorder_files() {
+    local current_files="$TEMP_DIR/selected_files"
+    local temp_file="$TEMP_DIR/reorder"
+    
+    echo -e "${BOLD}Current order:${NC}"
+    nl -w2 -s') ' "$current_files" | sed "s|$PROMPTS_DIR/||g"
+    echo
+    
+    echo -e "${BOLD}Reorder options:${NC}"
+    echo -e "  ${GREEN}k${NC}) ${BOLD}K${NC}eep current order"
+    echo -e "  ${GREEN}e${NC}) ${BOLD}E${NC}dit order interactively"
+    echo -e "  ${GREEN}r${NC}) ${BOLD}R${NC}everse order"
+    echo -e "  ${GREEN}b${NC}) ${BOLD}B${NC}ack"
+    echo
+    echo -e "${DIM}Press ENTER to keep current order${NC}"
+    
+    read -p "Choice: " choice
+    
+    if [[ -z "$choice" ]]; then
+        choice="k"
+    fi
+    
+    case $choice in
+        k)
+            echo -e "${GREEN}Order kept${NC}"
+            sleep 1
+            ;;
+        e)
+            # Create simple list for editing (no numbers - easier to move lines in vim)
+            sed "s|$PROMPTS_DIR/||g" "$current_files" > "$temp_file"
+            
+            echo -e "${BOLD}Edit the file order (move lines up/down as needed):${NC}"
+            echo -e "${DIM}In vim: dd to cut line, p to paste below, P to paste above${NC}"
+            echo -e "${DIM}Save and exit when done${NC}"
+            
+            "${EDITOR:-nano}" "$temp_file"
+            
+            # Parse back to file paths
+            while read -r filename; do
+                if [[ -n "$filename" ]]; then
+                    echo "$PROMPTS_DIR/$filename"
+                fi
+            done < "$temp_file" > "$current_files"
+            
+            echo -e "${GREEN}Order updated${NC}"
+            sleep 1
+            ;;
+        r)
+            tac "$current_files" > "$temp_file" && mv "$temp_file" "$current_files"
+            echo -e "${GREEN}Order reversed${NC}"
+            sleep 1
+            ;;
+        b)
+            ;;
+        *)
+            echo -e "${RED}Invalid choice${NC}"
+            sleep 1
+            ;;
+    esac
+}
+
+# Preview composition
+preview_composition() {
+    local current_files="$TEMP_DIR/selected_files"
+    
+    if [[ ! -s "$current_files" ]]; then
+        echo -e "${RED}No files in composition${NC}"
+        return 1
+    fi
+    
+    clear
+    echo -e "${BOLD}${CYAN}=== Composition Preview ===${NC}\n"
+    
+    local file_count=1
+    while IFS= read -r file; do
+        echo -e "${BOLD}${BLUE}[$file_count] $(basename "$file")${NC}"
+        echo -e "${DIM}$(head -3 "$file" | sed 's/^/  /')${NC}"
+        echo -e "${DIM}  [... $(wc -l < "$file") lines total ...]${NC}"
+        echo
+        ((file_count++))
+    done < "$current_files"
+    
+    echo -e "${BOLD}Actions:${NC}"
+    echo -e "  ${GREEN}c${NC}) ${BOLD}C${NC}opy to clipboard"
+    echo -e "  ${GREEN}s${NC}) ${BOLD}S${NC}ave as preset"
+    echo -e "  ${GREEN}x${NC}) Save as preset and copy (e${BOLD}x${NC}ecute both)"
+    echo -e "  ${GREEN}e${NC}) ${BOLD}E${NC}dit composition"
+    echo -e "  ${GREEN}b${NC}) ${BOLD}B${NC}ack to main menu"
+    echo
+    
+    local default_hint=""
+    case $LAST_ACTION in
+        "c") default_hint="copy to clipboard" ;;
+        "s") default_hint="save preset" ;;
+        "x") default_hint="save and copy" ;;
+    esac
+    
+    if [[ -n "$default_hint" ]]; then
+        echo -e "${DIM}Press ENTER for last action: $default_hint${NC}"
+    fi
+}
+
+# Generate final composition (without filename headers)
+generate_composition() {
+    local current_files="$TEMP_DIR/selected_files"
+    local output_file="$TEMP_DIR/composition"
+    
+    > "$output_file"  # Clear file
+    
+    local first=true
+    while IFS= read -r file; do
+        if [[ "$first" == true ]]; then
+            first=false
+        else
+            echo >> "$output_file"  # Add separator between files
+        fi
+        cat "$file" >> "$output_file"
+    done < "$current_files"
+    
+    echo "$output_file"
+}
+
+# Copy to clipboard
+copy_to_clipboard() {
+    local composition_file
+    composition_file=$(generate_composition)
+    
+    if command -v wl-copy >/dev/null; then
+        cat "$composition_file" | wl-copy
+        echo -e "${GREEN}Composition copied to clipboard${NC}"
+    elif command -v xclip >/dev/null; then
+        cat "$composition_file" | xclip -selection clipboard
+        echo -e "${GREEN}Composition copied to clipboard${NC}"
+    elif command -v pbcopy >/dev/null; then
+        cat "$composition_file" | pbcopy
+        echo -e "${GREEN}Composition copied to clipboard${NC}"
+    else
+        echo -e "${YELLOW}No clipboard utility found. Composition saved to: $composition_file${NC}"
+    fi
+    
+    save_last_action "c"
+}
+
+# Save preset
+save_preset() {
+    local current_files="$TEMP_DIR/selected_files"
+    
+    echo
+    read -p "Preset name: " preset_name
+    
+    if [[ -z "$preset_name" ]]; then
+        echo -e "${RED}Invalid preset name${NC}"
+        return 1
+    fi
+    
+    # Sanitize filename
+    preset_name=$(echo "$preset_name" | tr ' ' '_' | tr -cd '[:alnum:]_-')
+    local preset_file="$CONFIG_DIR/$preset_name.preset"
+    
+    if [[ -f "$preset_file" ]]; then
+        read -p "Preset exists. Overwrite? (y/N): " confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            echo -e "${YELLOW}Preset not saved${NC}"
+            return 1
+        fi
+    fi
+    
+    cp "$current_files" "$preset_file"
+    echo -e "${GREEN}Preset saved: $preset_name${NC}"
+    save_last_action "s"
+}
+
+# Load preset
+load_preset() {
+    local mode="$1"  # "edit" or "copy"
+    local presets
+    mapfile -t presets < <(ls "$CONFIG_DIR"/*.preset 2>/dev/null | sed 's|.*/||; s|\.preset$||')
+    
+    if [[ ${#presets[@]} -eq 0 ]]; then
+        echo -e "${YELLOW}No presets found${NC}"
+        read -p "Press ENTER to continue..."
+        return 1
+    fi
+    
+    echo -e "${BOLD}Select preset:${NC}"
+    local selected_preset
+    selected_preset=$(printf '%s\n' "${presets[@]}" | fzf --prompt="Select preset: " --height=10)
+    
+    if [[ -z "$selected_preset" ]]; then
+        echo -e "${YELLOW}No preset selected${NC}"
+        return 1
+    fi
+    
+    cp "$CONFIG_DIR/$selected_preset.preset" "$TEMP_DIR/selected_files"
+    
+    if [[ "$mode" == "copy" ]]; then
+        echo -e "${GREEN}Loaded preset: $selected_preset${NC}"
+        copy_to_clipboard
+        return 0
+    else
+        echo -e "${GREEN}Loaded preset: $selected_preset${NC}"
+        save_last_action "cd"
+        return 0
+    fi
+}
+
+# List presets
+list_presets() {
+    clear
+    echo -e "${BOLD}${CYAN}=== Available Presets ===${NC}\n"
+    
+    local count=0
+    for preset_file in "$CONFIG_DIR"/*.preset; do
+        if [[ -f "$preset_file" ]]; then
+            local preset_name=$(basename "$preset_file" .preset)
+            local file_count=$(wc -l < "$preset_file")
+            echo -e "${GREEN}$preset_name${NC} ${DIM}($file_count prompts)${NC}"
+            
+            # Show first few files in preset
+            head -3 "$preset_file" | sed "s|$PROMPTS_DIR/||g" | sed 's/^/  - /'
+            if [[ $file_count -gt 3 ]]; then
+                echo -e "  ${DIM}... and $((file_count - 3)) more${NC}"
+            fi
+            echo
+            ((count++))
+        fi
+    done
+    
+    if [[ $count -eq 0 ]]; then
+        echo -e "${YELLOW}No presets found${NC}"
+    fi
+    
+    echo
+    read -p "Press ENTER to continue..."
+}
+
+# Delete preset
+delete_preset() {
+    local presets
+    mapfile -t presets < <(ls "$CONFIG_DIR"/*.preset 2>/dev/null | sed 's|.*/||; s|\.preset$||')
+    
+    if [[ ${#presets[@]} -eq 0 ]]; then
+        echo -e "${YELLOW}No presets found${NC}"
+        read -p "Press ENTER to continue..."
+        return 1
+    fi
+    
+    echo -e "${BOLD}Select preset to delete:${NC}"
+    local selected_preset
+    selected_preset=$(printf '%s\n' "${presets[@]}" | fzf --prompt="Delete preset: " --height=10)
+    
+    if [[ -z "$selected_preset" ]]; then
+        echo -e "${YELLOW}No preset selected${NC}"
+        return 1
+    fi
+    
+    read -p "Delete preset '$selected_preset'? (y/N): " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        rm "$CONFIG_DIR/$selected_preset.preset"
+        echo -e "${GREEN}Preset deleted: $selected_preset${NC}"
+    else
+        echo -e "${YELLOW}Deletion cancelled${NC}"
+    fi
+    
+    read -p "Press ENTER to continue..."
+}
+
+# Create new composition workflow
+create_composition() {
+    if ! manage_files; then
+        return
+    fi
+    
+    while true; do
+        preview_composition
+        read -p "Choice: " choice
+        
+        # Handle default action
+        if [[ -z "$choice" ]]; then
+            choice="$LAST_ACTION"
+        fi
+        
+        case $choice in
+            c)
+                copy_to_clipboard
+                read -p "Press ENTER to continue..."
+                ;;
+            s)
+                save_preset
+                read -p "Press ENTER to continue..."
+                ;;
+            x)
+                if save_preset; then
+                    copy_to_clipboard
+                fi
+                read -p "Press ENTER to continue..."
+                ;;
+            e)
+                manage_files
+                ;;
+            b)
+                return
+                ;;
+            *)
+                echo -e "${RED}Invalid choice${NC}"
+                sleep 1
+                ;;
+        esac
+    done
+}
+
+# Main function
+main() {
+    init
+    
+    # If preset name provided as argument, load it directly and copy
+    if [[ $# -eq 1 ]]; then
+        local preset_name="$1"
+        if [[ -f "$CONFIG_DIR/$preset_name.preset" ]]; then
+            cp "$CONFIG_DIR/$preset_name.preset" "$TEMP_DIR/selected_files"
+            copy_to_clipboard
+            exit 0
+        else
+            echo -e "${RED}Preset not found: $preset_name${NC}"
+            exit 1
+        fi
+    fi
+    
+    # Main menu loop
+    while true; do
+        show_main_menu
+        read -p "Choice: " choice
+        
+        # Handle default action
+        if [[ -z "$choice" ]]; then
+            choice="$LAST_ACTION"
+        fi
+        
+        case $choice in
+            n)
+                create_composition
+                save_last_action "n"
+                ;;
+            cd)
+                if load_preset "edit"; then
+                    create_composition
+                fi
+                ;;
+            cp)
+                load_preset "copy"
+                save_last_action "cp"
+                ;;
+            ls)
+                list_presets
+                save_last_action "ls"
+                ;;
+            rm)
+                delete_preset
+                ;;
+            q|Q)
+                echo -e "${GREEN}Goodbye!${NC}"
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}Invalid choice${NC}"
+                sleep 1
+                ;;
+        esac
+    done
+}
+
+# Check dependencies
+check_deps() {
+    if ! command -v fzf >/dev/null; then
+        echo -e "${RED}Error: fzf is required but not installed${NC}"
+        echo -e "Install with: ${CYAN}sudo apt install fzf${NC} (Ubuntu/Debian)"
+        echo -e "           or: ${CYAN}brew install fzf${NC} (macOS)"
+        exit 1
+    fi
+}
+
+# Run
+check_deps
+main "$@"
