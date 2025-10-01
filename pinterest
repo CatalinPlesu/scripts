@@ -1,7 +1,0 @@
-#!/bin/bash
-
-cd ~/UsedProjects/pinterest-downloader
-
-source venv/bin/activate
-# ./pinterest-downloader.py -d /home/mnt/catalin/Pictures/ -j 8 -c 40 https://www.pinterest.com/Analfabetfunctional -f
-./pinterest-downloader.py -d /home/mnt/catalin/Pictures/ -j 8 -c 40 https://www.pinterest.com/Analfabetfunctional -rs
