@@ -1,0 +1,9 @@
+nmcli con show
+
+nmcli con mod "wired" ipv4.method manual \
+ipv4.addresses 192.168.0.25/24 \
+ipv4.gateway 192.168.0.1 \
+ipv4.dns "8.8.8.8, 1.1.1.1"
+
+nmcli con down "wired"
+nmcli con up "wired"
