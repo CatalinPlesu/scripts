@@ -1,0 +1,5 @@
+dirs=(
+    "/home/catalin/.config/"
+    "/home/catalin/scripts/"
+    "/home/catalin/dev/ergotype.2/"
+)

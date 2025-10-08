@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Array of directories to update
+source ./git_dirs
+
+# Loop through each directory
+for dir in "${dirs[@]}"; do
+    if [ -d "$dir/.git" ]; then
+        echo "Updating $dir..."
+        (
+            cd "$dir" || exit
+            git pull
+        )
+        echo "✅ $dir updated"
+    else
+        echo "❌ $dir is not a git repository"
+    fi
+    echo
+done
