@@ -15,8 +15,8 @@ case "$hostname" in
         dirs=(
             "/home/catalin/.config/"
             "/home/catalin/scripts/"
-            "/home/catalin/projects/ergotype.2/"
-            "/home/catalin/projects/read"
+            "/home/catalin/dev/ergotype.2/"
+            "/home/catalin/dev/read"
         )
         ;;
     *)
@@ -24,8 +24,6 @@ case "$hostname" in
         dirs=(
             "/home/catalin/.config/"
             "/home/catalin/scripts/"
-            "/home/catalin/dev/ergotype.2/"
-            "/home/catalin/dev/read"
         )
         ;;
 esac
