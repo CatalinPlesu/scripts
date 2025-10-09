@@ -1,6 +1,31 @@
-dirs=(
-    "/home/catalin/.config/"
-    "/home/catalin/scripts/"
-    "/home/catalin/dev/ergotype.2/"
-	"/home/catalin/dev/read"
-)
+#!/bin/bash
+
+hostname=$(hostname)
+
+case "$hostname" in
+    "workstation"|"aka55")
+        dirs=(
+            "/home/catalin/.config/"
+            "/home/catalin/scripts/"
+            "/home/catalin/dev/ergotype.2/"
+            "/home/catalin/dev/read"
+        )
+        ;;
+    "laptop"|"catalin-ThinkPad-E595")
+        dirs=(
+            "/home/catalin/.config/"
+            "/home/catalin/scripts/"
+            "/home/catalin/projects/ergotype.2/"
+            "/home/catalin/projects/read"
+        )
+        ;;
+    *)
+        # Default configuration
+        dirs=(
+            "/home/catalin/.config/"
+            "/home/catalin/scripts/"
+            "/home/catalin/dev/ergotype.2/"
+            "/home/catalin/dev/read"
+        )
+        ;;
+esac
