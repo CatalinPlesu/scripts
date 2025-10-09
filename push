@@ -9,6 +9,8 @@ for dir in "${dirs[@]}"; do
         echo "Updating $dir..."
         (
             cd "$dir" || exit
+			git add .
+            git commit
             git push
         )
         echo "✅ $dir pushed"
