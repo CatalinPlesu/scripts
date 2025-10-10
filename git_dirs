@@ -3,13 +3,13 @@
 hostname=$(hostname)
 
 case "$hostname" in
-    "workstation"|"aka55")
-        dirs=(
-            "/home/catalin/.config/"
-            "/home/catalin/scripts/"
-            "/home/catalin/dev/ergotype.2/"
-            "/home/catalin/dev/read"
-        )
+    "workstation"|"a520mkv2")
+		dirs=(
+			"/home/catalin/.config/"
+			"/home/catalin/scripts/"
+			"/home/catalin/dev/python/ErgoType/"
+			"/home/catalin/dev/elixir/read"
+		)
         ;;
     "laptop"|"catalin-ThinkPad-E595")
         dirs=(
