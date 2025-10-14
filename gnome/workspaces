@@ -1,0 +1,18 @@
+# disable dock hot key with numbers
+gsettings set org.gnome.shell.extensions.dash-to-dock hot-keys false
+
+# switch to workspace
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-5 "['<Super>5']"
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-6 "['<Super>6']"
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-7 "['<Super>7']"
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-8 "['<Super>8']"
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-9 "['<Super>9']"
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-10 "['<Super>0']"
+
+# move to workspace
+gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-5 "['<Super><Shift>5']"
+gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-6 "['<Super><Shift>6']"
+gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-7 "['<Super><Shift>7']"
+gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-8 "['<Super><Shift>8']"
+gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-9 "['<Super><Shift>9']"
+gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-10 "['<Super><Shift>0']"
