@@ -15,6 +15,8 @@ options=(
     "5.2 script edit|$HOME/scripts|edit_config.sh"
     "6 autostart pods|$HOME/scripts|podman-compose-autostart"
     "7 keyd keys|$HOME/.config/keyd|default.conf"
+    "8 hyperland |$HOME/.config/hypr/|hyprland.conf"
+    "8.1 hyperland bindings |$HOME/.config/hypr/|bindings.conf"
 )
 
 
