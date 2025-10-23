@@ -9,6 +9,7 @@ case "$hostname" in
 			"/home/catalin/scripts/"
 			"/home/catalin/dev/ErgoType/"
 			"/home/catalin/dev/read"
+			"/home/catalin/dev/dotnet/TangoCounterApi/"
 		)
         ;;
     "laptop"|"catalin-ThinkPad-E595")

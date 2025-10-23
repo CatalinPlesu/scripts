@@ -1038,6 +1038,8 @@ class PromptComposer:
                 elif choice == "cp":
                     self.load_preset("copy")
                     self.save_last_action("cp")
+                    print(f"{Colors.GREEN}Goodbye!{Colors.NC}")
+                    break
                 elif choice == "ls":
                     self.list_presets()
                 elif choice == "rm":
