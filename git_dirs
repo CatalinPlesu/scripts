@@ -18,6 +18,7 @@ case "$hostname" in
             "/home/catalin/scripts/"
             "/home/catalin/dev/ergotype.2/"
             "/home/catalin/dev/read.2"
+			"/home/catalin/dev/tango-counter-api/"
         )
         ;;
     *)
