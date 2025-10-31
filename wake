@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# pc
+wakeonlan 10:ff:e0:cc:8d:d3
+
+# laptop
+wakeonlan 8c:16:45:10:dd:aa
