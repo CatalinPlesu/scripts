@@ -169,8 +169,8 @@ xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Page_Up" -n -t
 xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>f" -n -t string -s "fullscreen_key" 2>/dev/null || \
     xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>f" -s "fullscreen_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>q" -n -t string -s "close_window_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>q" -s "close_window_key"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>q" -n -t string -s "close_window" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>q" -s "close_window"
 
 xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>d" -n -t string -s "show_desktop_key" 2>/dev/null || \
     xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>d" -s "show_desktop_key"
@@ -193,8 +193,8 @@ echo "Step 9: Setting up application launchers..."
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>Return" -n -t string -s "ghostty" 2>/dev/null || \
     xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>Return" -s "ghostty"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>b" -n -t string -s "flatpak run io.github.zen_browser.zen" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>b" -s "flatpak run io.github.zen_browser.zen"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>b" -n -t string -s "flatpak run app.zen_browser.zen" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>b" -s "flatpak run app.zen_browser.zen"
 
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>e" -n -t string -s "thunar" 2>/dev/null || \
     xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>e" -s "thunar"
