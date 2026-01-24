@@ -1,0 +1,218 @@
+#!/usr/bin/env dotnet
+
+using System;
+using System.IO;
+using System.Linq;
+using System.Diagnostics;
+using System.Collections.Generic;
+
+// Get the actual current directory from environment or use PWD
+var currentDir = Environment.GetEnvironmentVariable("PWD") 
+    ?? Environment.CurrentDirectory;
+
+// Step 1: Find current .csproj
+var currentCsproj = Directory.GetFiles(currentDir, "*.csproj").FirstOrDefault();
+
+if (currentCsproj == null)
+{
+    Console.WriteLine("Error: No .csproj file found in current directory");
+    Console.WriteLine($"Looking in: {currentDir}");
+    return 1;
+}
+
+var currentProjName = Path.GetFileName(currentCsproj);
+Console.WriteLine($"Current project: {currentProjName}");
+
+// Step 2: Find solution root (search upward for .sln or .slnx)
+string? FindSolutionRoot(string startDir)
+{
+    var dir = new DirectoryInfo(startDir);
+    
+    while (dir != null)
+    {
+        var slnFiles = dir.GetFiles("*.sln").Concat(dir.GetFiles("*.slnx"));
+        if (slnFiles.Any())
+        {
+            return dir.FullName;
+        }
+        dir = dir.Parent;
+    }
+    
+    return null;
+}
+
+var slnRoot = FindSolutionRoot(currentDir);
+
+if (slnRoot == null)
+{
+    Console.WriteLine("Error: No .sln or .slnx file found in parent directories");
+    return 1;
+}
+
+Console.WriteLine($"Solution root: {slnRoot}");
+
+// Step 3: Find all .csproj files from solution root (up to 3 levels deep)
+List<string> FindProjects(string rootPath, int maxDepth = 3)
+{
+    var projects = new List<string>();
+    
+    void SearchDirectory(string path, int currentDepth)
+    {
+        if (currentDepth > maxDepth) return;
+        
+        try
+        {
+            projects.AddRange(Directory.GetFiles(path, "*.csproj"));
+            
+            foreach (var dir in Directory.GetDirectories(path))
+            {
+                SearchDirectory(dir, currentDepth + 1);
+            }
+        }
+        catch (UnauthorizedAccessException) { }
+    }
+    
+    SearchDirectory(rootPath, 1);
+    return projects;
+}
+
+var allProjects = FindProjects(slnRoot)
+    .Select(p => Path.GetRelativePath(slnRoot, p))
+    .Where(p => !p.Equals(Path.GetRelativePath(slnRoot, currentCsproj), StringComparison.OrdinalIgnoreCase))
+    .OrderBy(p => p)
+    .ToList();
+
+if (!allProjects.Any())
+{
+    Console.WriteLine("Error: No other projects found");
+    return 1;
+}
+
+// Step 4: Use fzf for selection
+Console.WriteLine($"\nFound {allProjects.Count} projects. Use TAB to select multiple, ENTER to confirm...\n");
+
+var fzfProcess = new Process
+{
+    StartInfo = new ProcessStartInfo
+    {
+        FileName = "fzf",
+        Arguments = "--multi --prompt=\"Select projects to reference (TAB=select, ENTER=confirm): \" --height=40%",
+        RedirectStandardInput = true,
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        UseShellExecute = false
+    }
+};
+
+try
+{
+    fzfProcess.Start();
+    
+    // Write all projects to fzf
+    using (var writer = fzfProcess.StandardInput)
+    {
+        foreach (var project in allProjects)
+        {
+            writer.WriteLine(project);
+        }
+    }
+    
+    // Read selected projects
+    var selectedProjects = new List<string>();
+    string? line;
+    while ((line = fzfProcess.StandardOutput.ReadLine()) != null)
+    {
+        if (!string.IsNullOrWhiteSpace(line))
+        {
+            selectedProjects.Add(line.Trim());
+        }
+    }
+    
+    fzfProcess.WaitForExit();
+    
+    if (fzfProcess.ExitCode == 130) // Ctrl+C
+    {
+        Console.WriteLine("\nCancelled by user");
+        return 0;
+    }
+    
+    if (fzfProcess.ExitCode != 0 || !selectedProjects.Any())
+    {
+        Console.WriteLine("\nNo projects selected");
+        return 0;
+    }
+    
+    Console.WriteLine($"\nSelected {selectedProjects.Count} project(s):");
+    foreach (var proj in selectedProjects)
+    {
+        Console.WriteLine($"  - {proj}");
+    }
+    Console.WriteLine();
+    
+    // Step 5: Add references
+    foreach (var project in selectedProjects)
+    {
+        var fullPath = Path.Combine(slnRoot, project);
+        Console.WriteLine($"Adding reference to: {project}");
+        
+        // Use full path to dotnet to avoid any aliases
+        var dotnetPath = Environment.GetEnvironmentVariable("DOTNET_ROOT") != null
+            ? Path.Combine(Environment.GetEnvironmentVariable("DOTNET_ROOT")!, "dotnet")
+            : "/usr/bin/dotnet";
+        
+        // Fallback to 'which dotnet' if the above paths don't exist
+        if (!File.Exists(dotnetPath))
+        {
+            var whichProcess = Process.Start(new ProcessStartInfo
+            {
+                FileName = "/usr/bin/which",
+                Arguments = "dotnet",
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            });
+            whichProcess?.WaitForExit();
+            dotnetPath = whichProcess?.StandardOutput.ReadLine()?.Trim() ?? "dotnet";
+        }
+        
+        var dotnetProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = dotnetPath,
+                Arguments = $"add reference \"{fullPath}\"",
+                WorkingDirectory = currentDir,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                // Clear environment to avoid alias interference
+                EnvironmentVariables = { ["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1" }
+            }
+        };
+        
+        dotnetProcess.Start();
+        var output = dotnetProcess.StandardOutput.ReadToEnd();
+        var error = dotnetProcess.StandardError.ReadToEnd();
+        dotnetProcess.WaitForExit();
+        
+        if (dotnetProcess.ExitCode == 0)
+        {
+            Console.WriteLine($"  ✓ Added successfully");
+            if (!string.IsNullOrWhiteSpace(output))
+            {
+                Console.WriteLine($"  {output.Trim()}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"  ✗ Failed: {error}");
+        }
+    }
+    
+    Console.WriteLine("Done!");
+    return 0;
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error: {ex.Message}");
+    return 1;
+}
