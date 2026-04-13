@@ -3,6 +3,8 @@
 # XFCE4 Tiling WM Style Keybindings Setup Script
 # Enables BOTH arrow keys AND numpad for tiling
 
+xfconf-query -c xfwm4 -p /general/activate_action -s none
+
 set -e
 
 echo "==========================================="

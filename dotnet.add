@@ -1,0 +1,398 @@
+#!/usr/bin/env dotnet
+
+using System;
+using System.IO;
+using System.Linq;
+using System.Diagnostics;
+using System.Collections.Generic;
+using System.Text.Json;
+
+// Get the actual current directory from environment or use PWD
+var currentDir = Environment.GetEnvironmentVariable("PWD") 
+    ?? Environment.CurrentDirectory;
+
+// Step 1: Find solution root (search upward for .sln or .slnx)
+string? FindSolutionRoot(string startDir)
+{
+    var dir = new DirectoryInfo(startDir);
+    
+    while (dir != null)
+    {
+        var slnFiles = dir.GetFiles("*.sln").Concat(dir.GetFiles("*.slnx"));
+        if (slnFiles.Any())
+        {
+            return dir.FullName;
+        }
+        
+        // Also check for .git directory as fallback
+        if (Directory.Exists(Path.Combine(dir.FullName, ".git")))
+        {
+            return dir.FullName;
+        }
+        
+        dir = dir.Parent;
+    }
+    
+    return null;
+}
+
+var slnRoot = FindSolutionRoot(currentDir);
+
+if (slnRoot == null)
+{
+    Console.WriteLine("Error: No .sln, .slnx, or .git directory found in parent directories");
+    return 1;
+}
+
+Console.WriteLine($"Repository root: {slnRoot}");
+
+// Step 2: Find all .csproj files from solution root (up to 3 levels deep)
+List<string> FindProjects(string rootPath, int maxDepth = 3)
+{
+    var projects = new List<string>();
+    
+    void SearchDirectory(string path, int currentDepth)
+    {
+        if (currentDepth > maxDepth) return;
+        
+        try
+        {
+            projects.AddRange(Directory.GetFiles(path, "*.csproj"));
+            
+            foreach (var dir in Directory.GetDirectories(path))
+            {
+                // Skip common directories
+                var dirName = Path.GetFileName(dir);
+                if (dirName == "bin" || dirName == "obj" || dirName == "node_modules" || dirName == ".git")
+                    continue;
+                    
+                SearchDirectory(dir, currentDepth + 1);
+            }
+        }
+        catch (UnauthorizedAccessException) { }
+    }
+    
+    SearchDirectory(rootPath, 1);
+    return projects;
+}
+
+var allProjects = FindProjects(slnRoot)
+    .Select(p => Path.GetRelativePath(slnRoot, p))
+    .OrderBy(p => p)
+    .ToList();
+
+if (!allProjects.Any())
+{
+    Console.WriteLine("Error: No projects found");
+    return 1;
+}
+
+// Step 3: Use fzf for project selection
+Console.WriteLine($"\nFound {allProjects.Count} project(s). Select target project(s)...\n");
+
+var selectedProjects = new List<string>();
+
+var fzfProjectProcess = new Process
+{
+    StartInfo = new ProcessStartInfo
+    {
+        FileName = "fzf",
+        Arguments = "--multi --prompt=\"Select target project(s) (TAB=select, ENTER=confirm): \" --height=40%",
+        RedirectStandardInput = true,
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        UseShellExecute = false,
+        CreateNoWindow = true
+    }
+};
+
+try
+{
+    fzfProjectProcess.Start();
+    
+    using (var writer = fzfProjectProcess.StandardInput)
+    {
+        foreach (var project in allProjects)
+        {
+            writer.WriteLine(project);
+        }
+    }
+    
+    string? line;
+    while ((line = fzfProjectProcess.StandardOutput.ReadLine()) != null)
+    {
+        if (!string.IsNullOrWhiteSpace(line))
+        {
+            selectedProjects.Add(line.Trim());
+        }
+    }
+    
+    fzfProjectProcess.WaitForExit();
+    
+    if (fzfProjectProcess.ExitCode == 130)
+    {
+        Console.WriteLine("\nCancelled by user");
+        return 0;
+    }
+    
+    if (fzfProjectProcess.ExitCode != 0 || !selectedProjects.Any())
+    {
+        Console.WriteLine("\nNo projects selected");
+        return 0;
+    }
+    
+    Console.WriteLine($"\nSelected project(s):");
+    foreach (var proj in selectedProjects)
+    {
+        Console.WriteLine($"  - {proj}");
+    }
+    Console.WriteLine();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error selecting projects: {ex.Message}");
+    return 1;
+}
+
+// Step 4: Search for packages
+Console.Write("Enter package search term: ");
+var searchTerm = Console.ReadLine()?.Trim();
+
+if (string.IsNullOrWhiteSpace(searchTerm))
+{
+    Console.WriteLine("No search term provided");
+    return 0;
+}
+
+Console.WriteLine($"\nSearching for '{searchTerm}'...");
+
+var searchProcess = new Process
+{
+    StartInfo = new ProcessStartInfo
+    {
+        FileName = GetDotNetPath(),
+        Arguments = $"package search \"{searchTerm}\" --take 50 --format json",
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        UseShellExecute = false,
+        CreateNoWindow = true
+    }
+};
+
+List<string> packageOptions = new List<string>();
+
+try
+{
+    searchProcess.Start();
+    var jsonOutput = searchProcess.StandardOutput.ReadToEnd();
+    searchProcess.WaitForExit();
+    
+    if (searchProcess.ExitCode == 0 && !string.IsNullOrWhiteSpace(jsonOutput))
+    {
+        using var doc = JsonDocument.Parse(jsonOutput);
+        var root = doc.RootElement;
+        
+        if (root.TryGetProperty("searchResult", out var searchResults))
+        {
+            foreach (var result in searchResults.EnumerateArray())
+            {
+                if (result.TryGetProperty("packages", out var packages))
+                {
+                    foreach (var package in packages.EnumerateArray())
+                    {
+                        var packageId = package.GetProperty("packageId").GetString() ?? "";
+                        var version = package.GetProperty("latestVersion").GetString() ?? "";
+                        var description = package.TryGetProperty("description", out var desc) 
+                            ? desc.GetString() ?? "No description" 
+                            : "No description";
+                        
+                        // Truncate description to keep lines manageable
+                        if (description.Length > 80)
+                            description = description.Substring(0, 77) + "...";
+                        
+                        packageOptions.Add($"{packageId} | {version} | {description}");
+                    }
+                }
+            }
+        }
+    }
+    
+    if (!packageOptions.Any())
+    {
+        Console.WriteLine("No packages found");
+        return 0;
+    }
+    
+    Console.WriteLine($"Found {packageOptions.Count} package(s). Select packages with fzf...\n");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error searching packages: {ex.Message}");
+    return 1;
+}
+
+// Step 5: Use fzf to select from search results
+var fzfPackageProcess = new Process
+{
+    StartInfo = new ProcessStartInfo
+    {
+        FileName = "fzf",
+        Arguments = "--multi --prompt=\"Select package(s) (TAB=select, ENTER=confirm): \" --height=60% --delimiter=' \\| ' --with-nth=1,2 --preview=\"echo {}\" --preview-window=wrap:40%",
+        RedirectStandardInput = true,
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        UseShellExecute = false,
+        CreateNoWindow = true
+    }
+};
+
+var selectedPackages = new List<string>();
+
+try
+{
+    fzfPackageProcess.Start();
+    
+    using (var writer = fzfPackageProcess.StandardInput)
+    {
+        foreach (var pkg in packageOptions)
+        {
+            writer.WriteLine(pkg);
+        }
+    }
+    
+    string? packageLine;
+    while ((packageLine = fzfPackageProcess.StandardOutput.ReadLine()) != null)
+    {
+        if (!string.IsNullOrWhiteSpace(packageLine))
+        {
+            selectedPackages.Add(packageLine.Trim());
+        }
+    }
+    
+    fzfPackageProcess.WaitForExit();
+    
+    if (fzfPackageProcess.ExitCode == 130)
+    {
+        Console.WriteLine("\nCancelled by user");
+        return 0;
+    }
+    
+    if (fzfPackageProcess.ExitCode != 0 || !selectedPackages.Any())
+    {
+        Console.WriteLine("\nNo packages selected");
+        return 0;
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error selecting packages: {ex.Message}");
+    return 1;
+}
+
+// Step 6: Parse package names from selected lines
+var packageNames = new List<string>();
+foreach (var packageLine in selectedPackages)
+{
+    // Split by pipe and get the first part (package name)
+    var parts = packageLine.Split('|').Select(p => p.Trim()).ToArray();
+    if (parts.Length > 0 && !string.IsNullOrWhiteSpace(parts[0]))
+    {
+        packageNames.Add(parts[0]);
+    }
+}
+
+if (!packageNames.Any())
+{
+    Console.WriteLine("\nCould not parse package names");
+    return 1;
+}
+
+Console.WriteLine($"\nPackages to install:");
+foreach (var pkg in packageNames)
+{
+    Console.WriteLine($"  - {pkg}");
+}
+Console.WriteLine();
+
+// Step 7: Install packages to selected projects
+var dotnetPath = GetDotNetPath();
+
+foreach (var project in selectedProjects)
+{
+    var projectPath = Path.Combine(slnRoot, project);
+    var projectDir = Path.GetDirectoryName(projectPath)!;
+    
+    Console.WriteLine($"Installing to: {project}");
+    
+    foreach (var package in packageNames)
+    {
+        Console.WriteLine($"  Adding {package}...");
+        
+        var dotnetProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = dotnetPath,
+                Arguments = $"add \"{projectPath}\" package {package}",
+                WorkingDirectory = projectDir,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            }
+        };
+        
+        dotnetProcess.Start();
+        var output = dotnetProcess.StandardOutput.ReadToEnd();
+        var error = dotnetProcess.StandardError.ReadToEnd();
+        dotnetProcess.WaitForExit();
+        
+        if (dotnetProcess.ExitCode == 0)
+        {
+            Console.WriteLine($"    ✓ Added successfully");
+            if (!string.IsNullOrWhiteSpace(output))
+            {
+                var relevantOutput = output.Split('\n')
+                    .Where(l => l.Contains("PackageReference") || l.Contains("version"))
+                    .FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(relevantOutput))
+                {
+                    Console.WriteLine($"      {relevantOutput.Trim()}");
+                }
+            }
+        }
+        else
+        {
+            Console.WriteLine($"    ✗ Failed: {error}");
+        }
+    }
+    
+    Console.WriteLine();
+}
+
+Console.WriteLine("Done!");
+return 0;
+
+string GetDotNetPath()
+{
+    var dotnetRoot = Environment.GetEnvironmentVariable("DOTNET_ROOT");
+    if (dotnetRoot != null)
+    {
+        var path = Path.Combine(dotnetRoot, "dotnet");
+        if (File.Exists(path)) return path;
+    }
+    
+    if (File.Exists("/usr/bin/dotnet"))
+        return "/usr/bin/dotnet";
+    
+    var whichProcess = Process.Start(new ProcessStartInfo
+    {
+        FileName = "/usr/bin/which",
+        Arguments = "dotnet",
+        RedirectStandardOutput = true,
+        UseShellExecute = false
+    });
+    whichProcess?.WaitForExit();
+    var result = whichProcess?.StandardOutput.ReadLine()?.Trim();
+    
+    return !string.IsNullOrWhiteSpace(result) ? result : "dotnet";
+}
