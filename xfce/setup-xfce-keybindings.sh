@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # XFCE4 Tiling WM Style Keybindings Setup Script
-# Enables BOTH arrow keys AND numpad for tiling
+# Modifier key: Alt
 
 xfconf-query -c xfwm4 -p /general/activate_action -s none
 
@@ -9,7 +9,7 @@ set -e
 
 echo "==========================================="
 echo "XFCE4 Keyboard Shortcuts Configuration"
-echo "Tiling with BOTH Arrows and Numpad"
+echo "Modifier: Alt"
 echo "==========================================="
 echo ""
 
@@ -33,15 +33,32 @@ echo "  ✓ Tiling enabled"
 echo ""
 echo "Step 2: Clearing conflicting keybindings..."
 
-# Clear Super_L/R whisker menu bindings (they can conflict)
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/Super_L" -r 2>/dev/null || true
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/Super_R" -r 2>/dev/null || true
 
-# Clear any bare arrow keys
-xfconf-query -c xfwm4-keyboard-shortcuts -p "/xfwm4/custom/Left" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/Left" -r 2>/dev/null || true
 xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/Right" -r 2>/dev/null || true
 xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/Up" -r 2>/dev/null || true
 xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/Down" -r 2>/dev/null || true
+
+# Clear old Super bindings
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Left" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Right" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Up" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Down" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Page_Up" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>f" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>q" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>d" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Tab" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>bracketleft" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>bracketright" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super><Shift>bracketleft" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super><Shift>bracketright" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>Return" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>b" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>e" -r 2>/dev/null || true
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>l" -r 2>/dev/null || true
 
 echo "  ✓ Conflicts cleared"
 
@@ -51,72 +68,25 @@ echo "  ✓ Conflicts cleared"
 echo ""
 echo "Step 3: Setting up tiling with Arrow Keys..."
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Left" -n -t string -s "tile_left_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Left" -s "tile_left_key"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Left" -n -t string -s "tile_left_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Left" -s "tile_left_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Right" -n -t string -s "tile_right_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Right" -s "tile_right_key"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Right" -n -t string -s "tile_right_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Right" -s "tile_right_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Up" -n -t string -s "tile_up_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Up" -s "tile_up_key"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Up" -n -t string -s "tile_up_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Up" -s "tile_up_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Down" -n -t string -s "tile_down_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Down" -s "tile_down_key"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Down" -n -t string -s "tile_down_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Down" -s "tile_down_key"
 
-echo "  ✓ Arrow keys: Super+←/→/↑/↓"
-
-# ============================================
-# STEP 4: TILING - NUMPAD KEYS
-# ============================================
-echo ""
-echo "Step 4: Setting up tiling with Numpad..."
-
-# Cardinal directions (2,4,6,8)
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Left" -n -t string -s "tile_left_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Left" -s "tile_left_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Right" -n -t string -s "tile_right_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Right" -s "tile_right_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Up" -n -t string -s "tile_up_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Up" -s "tile_up_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Down" -n -t string -s "tile_down_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Down" -s "tile_down_key"
-
-# Corners (1,3,7,9)
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Home" -n -t string -s "tile_up_left_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Home" -s "tile_up_left_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_7" -n -t string -s "tile_up_left_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_7" -s "tile_up_left_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Page_Up" -n -t string -s "tile_up_right_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Page_Up" -s "tile_up_right_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_9" -n -t string -s "tile_up_right_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_9" -s "tile_up_right_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_End" -n -t string -s "tile_down_left_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_End" -s "tile_down_left_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_1" -n -t string -s "tile_down_left_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_1" -s "tile_down_left_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Next" -n -t string -s "tile_down_right_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_Next" -s "tile_down_right_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_3" -n -t string -s "tile_down_right_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>KP_3" -s "tile_down_right_key"
-
-echo "  ✓ Numpad: Super+KP_4/6/8/2 (directions)"
-echo "  ✓ Numpad: Super+KP_7/9/1/3 (corners)"
+echo "  ✓ Arrow keys: Alt+←/→/↑/↓"
 
 # ============================================
-# STEP 5: WORKSPACE SWITCHING (Alt + Number)
+# STEP 4: WORKSPACE SWITCHING (Alt + Number)
 # ============================================
 echo ""
-echo "Step 5: Setting up workspace switching..."
+echo "Step 4: Setting up workspace switching..."
 
 for i in {1..9}; do
     xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>$i" -n -t string -s "workspace_${i}_key" 2>/dev/null || \
@@ -126,10 +96,10 @@ done
 echo "  ✓ Alt+1 through Alt+9"
 
 # ============================================
-# STEP 6: MOVE WINDOW TO WORKSPACE
+# STEP 5: MOVE WINDOW TO WORKSPACE
 # ============================================
 echo ""
-echo "Step 6: Setting up move window to workspace..."
+echo "Step 5: Setting up move window to workspace..."
 
 for i in {1..9}; do
     xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt><Shift>$i" -n -t string -s "move_window_workspace_${i}_key" 2>/dev/null || \
@@ -139,89 +109,88 @@ done
 echo "  ✓ Alt+Shift+1 through Alt+Shift+9"
 
 # ============================================
-# STEP 7: WORKSPACE NAVIGATION
+# STEP 6: WORKSPACE NAVIGATION
 # ============================================
 echo ""
-echo "Step 7: Setting up workspace navigation..."
+echo "Step 6: Setting up workspace navigation..."
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>bracketleft" -n -t string -s "left_workspace_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>bracketleft" -s "left_workspace_key"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>bracketleft" -n -t string -s "left_workspace_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>bracketleft" -s "left_workspace_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>bracketright" -n -t string -s "right_workspace_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>bracketright" -s "right_workspace_key"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>bracketright" -n -t string -s "right_workspace_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>bracketright" -s "right_workspace_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super><Shift>bracketleft" -n -t string -s "move_window_left_workspace_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super><Shift>bracketleft" -s "move_window_left_workspace_key"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt><Shift>bracketleft" -n -t string -s "move_window_left_workspace_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt><Shift>bracketleft" -s "move_window_left_workspace_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super><Shift>bracketright" -n -t string -s "move_window_right_workspace_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super><Shift>bracketright" -s "move_window_right_workspace_key"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt><Shift>bracketright" -n -t string -s "move_window_right_workspace_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt><Shift>bracketright" -s "move_window_right_workspace_key"
 
-echo "  ✓ Super+[ and Super+] (navigate)"
-echo "  ✓ Super+Shift+[ and Super+Shift+] (move window)"
-
-# ============================================
-# STEP 8: WINDOW MANAGEMENT
-# ============================================
-echo ""
-echo "Step 8: Setting up window management..."
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Page_Up" -n -t string -s "maximize_window_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Page_Up" -s "maximize_window_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>f" -n -t string -s "fullscreen_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>f" -s "fullscreen_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>q" -n -t string -s "close_window" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>q" -s "close_window"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>d" -n -t string -s "show_desktop_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>d" -s "show_desktop_key"
-
-xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Tab" -n -t string -s "switch_window_key" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Super>Tab" -s "switch_window_key"
-
-echo "  ✓ Super+Page_Up (maximize)"
-echo "  ✓ Super+F (fullscreen)"
-echo "  ✓ Super+Q (close)"
-echo "  ✓ Super+D (show desktop)"
-echo "  ✓ Super+Tab (window switcher)"
+echo "  ✓ Alt+[ and Alt+] (navigate)"
+echo "  ✓ Alt+Shift+[ and Alt+Shift+] (move window)"
 
 # ============================================
-# STEP 9: APPLICATION LAUNCHERS
+# STEP 7: WINDOW MANAGEMENT
 # ============================================
 echo ""
-echo "Step 9: Setting up application launchers..."
+echo "Step 7: Setting up window management..."
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>Return" -n -t string -s "ghostty" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>Return" -s "ghostty"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Page_Up" -n -t string -s "maximize_window_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Page_Up" -s "maximize_window_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>b" -n -t string -s "flatpak run app.zen_browser.zen" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>b" -s "flatpak run app.zen_browser.zen"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>f" -n -t string -s "fullscreen_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>f" -s "fullscreen_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>e" -n -t string -s "thunar" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>e" -s "thunar"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>q" -n -t string -s "close_window_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>q" -s "close_window_key"
 
-xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>l" -n -t string -s "xflock4" 2>/dev/null || \
-    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>l" -s "xflock4"
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>d" -n -t string -s "show_desktop_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>d" -s "show_desktop_key"
+
+xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Tab" -n -t string -s "cycle_windows_key" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/xfwm4/custom/<Alt>Tab" -s "cycle_windows_key"
+
+echo "  ✓ Alt+Page_Up (maximize)"
+echo "  ✓ Alt+F (fullscreen)"
+echo "  ✓ Alt+Q (close)"
+echo "  ✓ Alt+D (show desktop)"
+echo "  ✓ Alt+Tab (window switcher)"
+
+# ============================================
+# STEP 8: APPLICATION LAUNCHERS
+# ============================================
+echo ""
+echo "Step 8: Setting up application launchers..."
+
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>Return" -n -t string -s "ghostty" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>Return" -s "ghostty"
+
+zfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>b" -n -t string -s "zen-browser" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>b" -s "zen-browser"
+
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>e" -n -t string -s "thunar" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>e" -s "thunar"
+
+xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>l" -n -t string -s "xflock4" 2>/dev/null || \
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>l" -s "xflock4"
 
 xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>space" -n -t string -s "xfce4-appfinder" 2>/dev/null || \
     xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Alt>space" -s "xfce4-appfinder"
 
-echo "  ✓ Super+Enter (Ghostty)"
-echo "  ✓ Super+B (Zen Browser)"
-echo "  ✓ Super+E (Thunar)"
-echo "  ✓ Super+L (Lock)"
+echo "  ✓ Alt+Enter (Ghostty)"
+echo "  ✓ Alt+B (Zen Browser)"
+echo "  ✓ Alt+E (Thunar)"
+echo "  ✓ Alt+L (Lock)"
 echo "  ✓ Alt+Space (App Finder)"
 
 # ============================================
-# STEP 10: RESTART WINDOW MANAGER
+# STEP 9: RESTART WINDOW MANAGER
 # ============================================
 echo ""
-echo "Step 10: Restarting window manager..."
+echo "Step 9: Restarting window manager..."
 
-killall xfwm4 2>/dev/null || true
-sleep 1
-xfwm4 &
+xfwm4 --replace &
+disown
 sleep 2
 
 echo "  ✓ XFWM4 restarted"
@@ -236,15 +205,10 @@ echo "==========================================="
 echo ""
 
 echo "Arrow Keys Tiling:"
-echo "  Super+Left  : $(xfconf-query -c xfce4-keyboard-shortcuts -p '/xfwm4/custom/<Super>Left' 2>/dev/null || echo 'NOT SET')"
-echo "  Super+Right : $(xfconf-query -c xfce4-keyboard-shortcuts -p '/xfwm4/custom/<Super>Right' 2>/dev/null || echo 'NOT SET')"
-echo "  Super+Up    : $(xfconf-query -c xfce4-keyboard-shortcuts -p '/xfwm4/custom/<Super>Up' 2>/dev/null || echo 'NOT SET')"
-echo "  Super+Down  : $(xfconf-query -c xfce4-keyboard-shortcuts -p '/xfwm4/custom/<Super>Down' 2>/dev/null || echo 'NOT SET')"
-
-echo ""
-echo "Numpad Tiling:"
-echo "  Super+KP_4/6/8/2 (←/→/↑/↓) - directions"
-echo "  Super+KP_7/9/1/3 (corners)"
+echo "  Alt+Left  : $(xfconf-query -c xfce4-keyboard-shortcuts -p '/xfwm4/custom/<Alt>Left' 2>/dev/null || echo 'NOT SET')"
+echo "  Alt+Right : $(xfconf-query -c xfce4-keyboard-shortcuts -p '/xfwm4/custom/<Alt>Right' 2>/dev/null || echo 'NOT SET')"
+echo "  Alt+Up    : $(xfconf-query -c xfce4-keyboard-shortcuts -p '/xfwm4/custom/<Alt>Up' 2>/dev/null || echo 'NOT SET')"
+echo "  Alt+Down  : $(xfconf-query -c xfce4-keyboard-shortcuts -p '/xfwm4/custom/<Alt>Down' 2>/dev/null || echo 'NOT SET')"
 
 echo ""
 echo "XFWM4 Tiling Enabled:"
@@ -257,22 +221,28 @@ echo "==========================================="
 echo ""
 echo "QUICK REFERENCE:"
 echo ""
-echo "Tiling (Arrows OR Numpad):"
-echo "  Super+←/→/↑/↓          → Tile window"
-echo "  Super+KP_4/6/8/2       → Tile window (numpad)"
-echo "  Super+KP_7/9/1/3       → Corner tiling"
+echo "Tiling:"
+echo "  Alt+←/→/↑/↓           → Tile window"
 echo ""
 echo "Workspaces:"
 echo "  Alt+1-9                → Switch to workspace"
 echo "  Alt+Shift+1-9          → Move window to workspace"
-echo "  Super+[/]              → Previous/next workspace"
-echo "  Super+Shift+[/]        → Move window to prev/next"
+echo "  Alt+[/]                → Previous/next workspace"
+echo "  Alt+Shift+[/]          → Move window to prev/next"
 echo ""
 echo "Window Management:"
-echo "  Super+Page_Up          → Maximize"
-echo "  Super+F                → Fullscreen"
-echo "  Super+Q                → Close window"
+echo "  Alt+Page_Up            → Maximize"
+echo "  Alt+F                  → Fullscreen"
+echo "  Alt+Q                  → Close window"
+echo "  Alt+D                  → Show desktop"
+echo "  Alt+Tab                → Cycle windows"
 echo ""
-echo "If tiling doesn't work, check:"
-echo "  Settings → Window Manager Tweaks → Accessibility"
-echo "  Make sure 'Key used to grab windows' is NOT Super"
+echo "Launchers:"
+echo "  Alt+Enter              → Ghostty"
+echo "  Alt+B                  → Zen Browser"
+echo "  Alt+E                  → Thunar"
+echo "  Alt+L                  → Lock screen"
+echo "  Alt+Space              → App Finder"
+echo ""
+echo "NOTE: Alt+Tab and Alt+F4 are used by many apps."
+echo "If conflicts arise, consider moving those to Alt+Shift."
