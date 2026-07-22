@@ -22,16 +22,23 @@ for key in $(gsettings list-keys org.gnome.desktop.wm.keybindings); do
     fi
 done
 
-for key in $(gsettings list-keys org.gnome.settings-daemon.plugins.media-keys); do
-    if [ "$key" != "screenshot" ] && [ "$key" != "window-screenshot" ] && [ "$key" != "area-screenshot" ] && [ "$key" != "custom-keybindings" ]; then
-        gsettings set org.gnome.settings-daemon.plugins.media-keys "$key" "@as []" 2>/dev/null || \
-        gsettings set org.gnome.settings-daemon.plugins.media-keys "$key" "0" 2>/dev/null
-    fi
-done
+# NOTE: We deliberately do NOT touch org.gnome.settings-daemon.plugins.media-keys here.
+# That schema isn't just "screenshot" bindings -- it's also where GNOME stores every
+# hardware media key: volume-up/down/mute, mic-mute, brightness-up/down, play/pause/
+# next/previous, eject, and more. Those are bound to XF86 keysyms, which can never
+# collide with Alt/Super letter combos, so wiping this schema bought nothing and just
+# killed the laptop's media keys. Screenshot bindings are left as-is, and
+# custom-keybindings gets fully overwritten further down regardless, so there's
+# nothing left for this loop to usefully clean up.
 
+# The modern screenshot / screen-recording UI triggers live in THIS schema too,
+# under different key names than the media-keys ones above (screenshot-window vs
+# window-screenshot, etc). Same story as before: not window management, so protect them.
 for key in $(gsettings list-keys org.gnome.shell.keybindings); do
-    gsettings set org.gnome.shell.keybindings "$key" "@as []" 2>/dev/null || \
-    gsettings set org.gnome.shell.keybindings "$key" "0" 2>/dev/null
+    if [ "$key" != "screenshot" ] && [ "$key" != "screenshot-window" ] && [ "$key" != "show-screenshot-ui" ] && [ "$key" != "show-screen-recording-ui" ]; then
+        gsettings set org.gnome.shell.keybindings "$key" "@as []" 2>/dev/null || \
+        gsettings set org.gnome.shell.keybindings "$key" "0" 2>/dev/null
+    fi
 done
 
 echo "🔕 Disabling Super overview key so it never eats combos..."
